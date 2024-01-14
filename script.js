@@ -52,10 +52,12 @@ const createGrid = () => {
             let col = document.createElement("div");
             col.classList.add("gridCol");
             col.setAttribute("id", `gridCol${count}`);
+            col.style.backgroundColor = "#FFFFFF"; // Establecer el color de fondo inicial a blanco
+
             col.addEventListener(events[deviceType].down, () => {
                 draw = true;
                 if (erase) {
-                    col.style.backgroundColor = "transparent";
+                    col.style.backgroundColor = "white"; // Cambiar a blanco en lugar de transparente
                 } else {
                     col.style.backgroundColor = colorButton.value;
                 }
@@ -64,7 +66,7 @@ const createGrid = () => {
             col.addEventListener(events[deviceType].move, (e) => {
                 let elementId = document.elementFromPoint(
                     !isTouchDevice() ? e.clientX : e.touches[0].clientX,
-                    !isTouchDevice() ? e.clientY : e.touches[0].clientY,
+                    !isTouchDevice() ? e.clientY : e.touches[0].clientY
                 ).id;
                 checker(elementId);
             });
@@ -86,7 +88,7 @@ const checker = (elementId) => {
             if (draw && !erase) {
                 element.style.backgroundColor = colorButton.value;
             } else if (draw && erase) {
-                element.style.backgroundColor = "transparent";
+                element.style.backgroundColor = "white"; // Asegurarse de que se pinte de blanco
             }
         }
     });
@@ -126,20 +128,30 @@ function gridToCanvas() {
     const ctx = canvas.getContext('2d');
     const gridRows = document.querySelectorAll('.gridRow');
     const gridSize = gridRows.length;
-    const cellSize = 20; // Size of each cell in the canvas
+    const cellSize = 20; // Tamaño de cada celda en el lienzo
 
     canvas.width = gridSize * cellSize;
     canvas.height = gridSize * cellSize;
 
+    // Primero, dibuja el fondo de cada celda
     gridRows.forEach((row, y) => {
         row.childNodes.forEach((cell, x) => {
-            ctx.fillStyle = cell.style.backgroundColor || '#FFFFFF'; // Default to white if no color
+            ctx.fillStyle = cell.style.backgroundColor || '#FFFFFF';
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         });
     });
 
+    // Luego, dibuja los bordes de las celdas
+    ctx.strokeStyle = '#bdbbbb'; // Color del borde
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        }
+    }
+
     return canvas;
 }
+
 
 // Function to download the image
 function downloadImage() {
@@ -159,5 +171,5 @@ window.onload = () => {
     gridWidth.value = 10;
     widthValue.innerHTML = gridWidth.value;
     heightValue.innerHTML = gridHeight.value;
-    createGrid(); // Optionally, create an initial grid on load
+    createGrid(); // Opcionalmente, crear una cuadrícula inicial al cargar
 };
