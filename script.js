@@ -41,34 +41,27 @@ isTouchDevice();
 
 const createGrid = () => {
     container.innerHTML = "";
-    let count = 0;
     for (let i = 0; i < gridHeight.value; i++) {
-        count += 2;
         let div = document.createElement("div");
         div.classList.add("gridRow");
 
         for (let j = 0; j < gridWidth.value; j++) {
-            count += 2;
             let col = document.createElement("div");
             col.classList.add("gridCol");
-            col.setAttribute("id", `gridCol${count}`);
             col.style.backgroundColor = "#FFFFFF"; // Establecer el color de fondo inicial a blanco
 
-            col.addEventListener(events[deviceType].down, () => {
+            col.addEventListener(events[deviceType].down, (e) => {
                 draw = true;
-                if (erase) {
-                    col.style.backgroundColor = "white"; // Cambiar a blanco en lugar de transparente
-                } else {
-                    col.style.backgroundColor = colorButton.value;
-                }
+                paintCell(e.target);
             });
 
             col.addEventListener(events[deviceType].move, (e) => {
-                let elementId = document.elementFromPoint(
-                    !isTouchDevice() ? e.clientX : e.touches[0].clientX,
-                    !isTouchDevice() ? e.clientY : e.touches[0].clientY
-                ).id;
-                checker(elementId);
+                if (draw) {
+                    const element = document.elementFromPoint(e.clientX, e.clientY);
+                    if (element && element.classList.contains("gridCol")) {
+                        paintCell(element);
+                    }
+                }
             });
 
             col.addEventListener(events[deviceType].up, () => {
@@ -80,6 +73,20 @@ const createGrid = () => {
         container.appendChild(div);
     }
 };
+
+function paintCell(cell) {
+    if (cell && cell.classList.contains("gridCol")) {
+        if (erase) {
+            cell.style.backgroundColor = "white";
+        } else {
+            cell.style.backgroundColor = colorButton.value;
+        }
+    }
+}
+
+document.addEventListener(events[deviceType].up, () => {
+    draw = false;
+});
 
 const checker = (elementId) => {
     let gridColumns = document.querySelectorAll(".gridCol");
@@ -107,11 +114,17 @@ clearGridRadio.addEventListener("change", () => {
 });
 
 eraseRadio.addEventListener("change", () => {
-    erase = eraseRadio.checked;
+    if (eraseRadio.checked) {
+        erase = true;
+        draw = false; // Asegurar que no estamos en modo dibujo
+    }
 });
 
 paintRadio.addEventListener("change", () => {
-    erase = !paintRadio.checked;
+    if (paintRadio.checked) {
+        erase = false;
+        draw = true; // Activar el modo dibujo
+    }
 });
 
 gridWidth.addEventListener("input", () => {
@@ -126,14 +139,17 @@ gridHeight.addEventListener("input", () => {
 function gridToCanvas() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const gridRows = document.querySelectorAll('.gridRow');
-    const gridSize = gridRows.length;
+    const numCols = parseInt(gridWidth.value); // Número de columnas
+    const numRows = parseInt(gridHeight.value); // Número de filas
     const cellSize = 20; // Tamaño de cada celda en el lienzo
 
-    canvas.width = gridSize * cellSize;
-    canvas.height = gridSize * cellSize;
+    canvas.width = numCols * cellSize;
+    canvas.height = numRows * cellSize;
 
-    // Primero, dibuja el fondo de cada celda
+    // Obtener las filas de la cuadrícula directamente aquí
+    const gridRows = document.querySelectorAll('.gridRow');
+
+    // Dibuja el fondo de cada celda
     gridRows.forEach((row, y) => {
         row.childNodes.forEach((cell, x) => {
             ctx.fillStyle = cell.style.backgroundColor || '#FFFFFF';
@@ -141,16 +157,17 @@ function gridToCanvas() {
         });
     });
 
-    // Luego, dibuja los bordes de las celdas
+    // Dibuja los bordes de las celdas
     ctx.strokeStyle = '#bdbbbb'; // Color del borde
-    for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
+    for (let i = 0; i < numRows; i++) {
+        for (let j = 0; j < numCols; j++) {
             ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
         }
     }
 
     return canvas;
 }
+
 
 
 // Function to download the image
