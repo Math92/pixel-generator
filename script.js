@@ -120,9 +120,44 @@ gridHeight.addEventListener("input", () => {
     heightValue.innerHTML = gridHeight.value < 10 ? `0${gridHeight.value}` : gridHeight.value;
 });
 
+// Function to convert the grid to a canvas
+function gridToCanvas() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const gridRows = document.querySelectorAll('.gridRow');
+    const gridSize = gridRows.length;
+    const cellSize = 20; // Size of each cell in the canvas
+
+    canvas.width = gridSize * cellSize;
+    canvas.height = gridSize * cellSize;
+
+    gridRows.forEach((row, y) => {
+        row.childNodes.forEach((cell, x) => {
+            ctx.fillStyle = cell.style.backgroundColor || '#FFFFFF'; // Default to white if no color
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        });
+    });
+
+    return canvas;
+}
+
+// Function to download the image
+function downloadImage() {
+    const canvas = gridToCanvas();
+    const image = canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
+    const link = document.createElement('a');
+    link.download = 'pixel-art.jpg';
+    link.href = image;
+    link.click();
+}
+
+// Event listener for save button
+document.getElementById('save-btn').addEventListener('click', downloadImage);
+
 window.onload = () => {
     gridHeight.value = 10;
     gridWidth.value = 10;
     widthValue.innerHTML = gridWidth.value;
     heightValue.innerHTML = gridHeight.value;
+    createGrid(); // Optionally, create an initial grid on load
 };
